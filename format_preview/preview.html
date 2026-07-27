@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Format Preview - WhatsApp & Markdown</title>
+  <style>
+    :root {
+      --bg: #081018;
+      --bg-2: #0d1722;
+      --panel: rgba(13, 23, 34, 0.82);
+      --panel-border: rgba(154, 177, 201, 0.14);
+      --text: #e6edf5;
+      --muted: #95a3b4;
+      --accent: #52d6a6;
+      --accent-2: #65a9ff;
+      --danger: #ff6b7a;
+      --warning: #ffcc66;
+      --code-bg: #0a111a;
+      --editor-bg: #0a1220;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(82, 214, 166, 0.16), transparent 28%),
+        radial-gradient(circle at top right, rgba(101, 169, 255, 0.18), transparent 30%),
+        linear-gradient(180deg, #04070c 0%, #081018 55%, #060a11 100%);
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.6;
+    }
+
+    .mode-pill {
+      display: inline-flex;
+      padding: 6px;
+      gap: 6px;
+      border: 1px solid var(--panel-border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+    }
+
+    .mode-pill button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .mode-pill button.active {
+      color: #051018;
+      background: linear-gradient(135deg, var(--accent), #95f0cf);
+      box-shadow: 0 10px 24px rgba(82, 214, 166, 0.25);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0;
+      align-items: center;
+    }
+
+    .toolbar button,
+    .toolbar select {
+      border: 1px solid var(--panel-border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .toolbar button:hover,
+    .toolbar select:hover {
+      transform: translateY(-1px);
+      border-color: rgba(101, 169, 255, 0.45);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .toolbar .primary {
+      background: linear-gradient(135deg, var(--accent-2), #84d6ff);
+      color: #041018;
+      font-weight: 700;
+      border-color: transparent;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) minmax(320px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: 0.01em;
+    }
+
+    .panel-head .meta {
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    .panel-body {
+      padding: 16px 18px 18px;
+    }
+
+    .editor {
+      width: 100%;
+      min-height: 460px;
+      resize: vertical;
+      border: 1px solid rgba(154, 177, 201, 0.18);
+      border-radius: 14px;
+      outline: none;
+      background: linear-gradient(180deg, rgba(10, 18, 32, 0.92), rgba(6, 12, 21, 0.95));
+      color: var(--text);
+      padding: 14px 16px;
+      line-height: 1.6;
+      font-size: 14px;
+      font-family: Consolas, "Courier New", monospace;
+      white-space: pre;
+    }
+
+    .editor:focus {
+      border-color: rgba(101, 169, 255, 0.55);
+      box-shadow: 0 0 0 3px rgba(101, 169, 255, 0.12);
+    }
+
+    .helper {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .helper-card {
+      border: 1px solid rgba(154, 177, 201, 0.14);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .helper-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .helper-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .preview-wrap {
+      padding: 16px 18px 18px;
+    }
+
+    .preview-tabs {
+      display: inline-flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(154, 177, 201, 0.14);
+      margin-bottom: 14px;
+    }
+
+    .preview-tabs button {
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .preview-tabs button.active {
+      color: #041018;
+      background: linear-gradient(135deg, var(--accent), #b6f6df);
+    }
+
+    .preview {
+      border-radius: 18px;
+      border: 1px solid rgba(154, 177, 201, 0.16);
+      overflow: hidden;
+      min-height: 460px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.06), transparent 22%),
+        linear-gradient(180deg, #0f1720 0%, #09111a 100%);
+    }
+
+    .preview-panel {
+      display: none;
+      min-height: 460px;
+    }
+
+    .preview-panel.active {
+      display: block;
+    }
+
+    .wa-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 460px;
+    }
+
+    .wa-header {
+      padding: 14px 16px;
+      background: linear-gradient(180deg, #1f2c34, #17232b);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1bb76e, #53e0ad);
+      color: #041018;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .wa-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .wa-sub {
+      font-size: 12px;
+      color: #96a4b2;
+    }
+
+    .wa-body {
+      flex: 1;
+      padding: 14px;
+      background:
+        linear-gradient(rgba(10, 18, 32, 0.92), rgba(10, 18, 32, 0.92)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 10px, transparent 10px 20px);
+    }
+
+    .wa-date {
+      text-align: center;
+      margin: 6px 0 14px;
+    }
+
+    .wa-date span {
+      display: inline-block;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #b0becb;
+      font-size: 11px;
+    }
+
+    .bubble {
+      max-width: 100%;
+      width: fit-content;
+      background: #202c33;
+      border-radius: 0 12px 12px 12px;
+      padding: 12px 13px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+      color: #e9edef;
+    }
+
+    .bubble-content {
+      font-size: 13.5px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .bubble-content strong,
+    .bubble-content em,
+    .bubble-content del,
+    .bubble-content code {
+      color: inherit;
+    }
+
+    .bubble-content code {
+      padding: 0 4px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12.5px;
+    }
+
+    .bubble-content pre {
+      margin: 10px 0;
+      padding: 10px 12px;
+      background: rgba(0, 0, 0, 0.22);
+      border-radius: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .bubble-meta {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 11px;
+      color: #8696a0;
+    }
+
+    .mark-shell {
+      padding: 18px;
+      color: #dfe7f1;
+    }
+
+    .md-surface {
+      background: rgba(8, 14, 22, 0.75);
+      border: 1px solid rgba(154, 177, 201, 0.12);
+      border-radius: 18px;
+      padding: 20px;
+      min-height: 424px;
+      line-height: 1.7;
+      overflow: auto;
+    }
+
+    .md-surface h1,
+    .md-surface h2,
+    .md-surface h3,
+    .md-surface h4 {
+      line-height: 1.2;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .md-surface h1 { font-size: 30px; }
+    .md-surface h2 { font-size: 24px; }
+    .md-surface h3 { font-size: 20px; }
+    .md-surface h4 { font-size: 17px; }
+
+    .md-surface p {
+      margin: 0 0 14px;
+      color: #d7e0eb;
+    }
+
+    .md-surface ul,
+    .md-surface ol {
+      margin: 0 0 14px 22px;
+      padding: 0;
+    }
+
+    .md-surface li {
+      margin: 5px 0;
+    }
+
+    .md-surface blockquote {
+      margin: 0 0 14px;
+      padding: 10px 14px;
+      border-left: 4px solid var(--accent-2);
+      background: rgba(101, 169, 255, 0.08);
+      color: #dce7f5;
+      border-radius: 10px;
+    }
+
+    .md-surface code {
+      font-family: Consolas, "Courier New", monospace;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 0 5px;
+      font-size: 0.95em;
+    }
+
+    .md-surface pre {
+      margin: 0 0 14px;
+      padding: 14px;
+      overflow: auto;
+      background: #0a111a;
+      border-radius: 14px;
+      border: 1px solid rgba(154, 177, 201, 0.14);
+    }
+
+    .md-surface pre code {
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+      display: block;
+      white-space: pre;
+    }
+
+    .md-surface table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 14px;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+
+    .md-surface th,
+    .md-surface td {
+      border: 1px solid rgba(154, 177, 201, 0.14);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .md-surface th {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .status-line {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12.5px;
+      flex-wrap: wrap;
+    }
+
+    .status-line strong {
+      color: var(--text);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 980px) {
+      body { padding: 16px; }
+      .grid { grid-template-columns: 1fr; }
+      .editor,
+      .preview,
+      .preview-panel,
+      .wa-shell,
+      .md-surface {
+        min-height: 380px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        align-items: flex-start;
+      }
+      .helper {
+        grid-template-columns: 1fr;
+      }
+      .panel-head,
+      .toolbar,
+      .status-line {
+        align-items: flex-start;
+      }
+      .mode-pill,
+      .preview-tabs {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .mode-pill button,
+      .preview-tabs button {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div>
+        <h1>Format Preview</h1>
+        <p>Preview teks WhatsApp dan Markdown dalam satu halaman. Paste data mentah, lalu pilih mode yang ingin dicek sebelum dipakai di aplikasi lain.</p>
+      </div>
+      <div class="mode-pill" role="tablist" aria-label="Mode input">
+        <button id="mode-wa" class="active" type="button" data-mode="wa">WhatsApp</button>
+        <button id="mode-md" type="button" data-mode="markdown">Markdown</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="primary" id="btn-render" type="button">Preview</button>
+      <button type="button" id="btn-sample-wa">Contoh WA</button>
+      <button type="button" id="btn-sample-wa-long">Contoh WA Log</button>
+      <button type="button" id="btn-sample-md">Contoh Markdown</button>
+      <button type="button" id="btn-clear">Bersihkan</button>
+      <select id="input-format" aria-label="Format input">
+        <option value="auto">Auto detect</option>
+        <option value="raw">Raw text</option>
+        <option value="json">JSON string</option>
+      </select>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Input</h2>
+            <div class="meta" id="input-meta">WhatsApp preview aktif</div>
+          </div>
+          <div class="meta"><span id="char-count">0</span> chars · <span id="line-count">0</span> lines</div>
+        </div>
+        <div class="panel-body">
+          <textarea id="source" class="editor" spellcheck="false" placeholder="Paste teks di sini..."></textarea>
+          <div class="helper">
+            <div class="helper-card">
+              <strong>WhatsApp</strong>
+              <span><code>*teks*</code> bold, <code>_teks_</code> italic, <code>~teks~</code> strikethrough, <code>```kode```</code> monospace.</span>
+            </div>
+            <div class="helper-card">
+              <strong>Markdown</strong>
+              <span><code>#</code> heading, <code>**tebal**</code>, <code>*miring*</code>, list, blockquote, table, dan code block.</span>
+            </div>
+          </div>
+          <div class="status-line">
+            <span>Status: <strong id="status-text">Siap</strong></span>
+            <span id="status-note">Preview akan mengikuti mode yang dipilih.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Preview</h2>
+            <div class="meta">Render hasil formatting secara langsung</div>
+          </div>
+          <div class="preview-tabs" role="tablist" aria-label="Preview mode">
+            <button id="tab-wa" class="active" type="button">WA</button>
+            <button id="tab-md" type="button">Markdown</button>
+          </div>
+        </div>
+        <div class="preview-wrap">
+          <div class="preview">
+            <div id="preview-wa" class="preview-panel active">
+              <div class="wa-shell">
+                <div class="wa-header">
+                  <div class="avatar">WA</div>
+                  <div>
+                    <div class="wa-title">WhatsApp Preview</div>
+                    <div class="wa-sub">Simulasi bubble pesan</div>
+                  </div>
+                </div>
+                <div class="wa-body">
+                  <div class="wa-date"><span id="wa-date">Hari ini</span></div>
+                  <div id="wa-output"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="preview-md" class="preview-panel">
+              <div class="mark-shell">
+                <div class="md-surface" id="md-output"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const SAMPLE_WA = `*Halo, Selamat Datang!* 👋
+
+Terima kasih telah menghubungi layanan pelanggan kami. Ini adalah contoh preview pesan WhatsApp untuk memastikan format teks Anda sudah benar sebelum dikirimkan.
+
+Berikut adalah beberapa modul format yang bisa Anda uji:
+• *Teks Tebal (Bold)* -> Gunakan tanda bintang
+• _Teks Miring (Italic)_ -> Gunakan garis bawah
+• ~Teks Dicoret (Strikethrough)~ -> Gunakan tanda gelombang
+• \`\`\`Teks Monospace (Kode)\`\`\` -> Gunakan tiga backtick
+
+*Detail Informasi:*
+------------------------------
+| Status | *Aktif*
+| Kode   | \`\`\`WA-PREVIEW-2026\`\`\`
+------------------------------
+
+Jika ada hal lain yang perlu ditanyakan, silakan balas pesan ini ya. Semoga harimu menyenangkan! 😊`;
+
+    const SAMPLE_WA_LONG = `"Shift Pagi (Operator A, 07:00-15:00): 120 sensor, 104 online, 16 offline. 2 anomali kritis:\\n1. Power Factor Waterpool turun (efisiensi listrik menurun).\\n2. TSS area RWT WWTP tinggi (pompa transfer solid kemungkinan bermasalah).\\nAction: Cek panel listrik & kabel Waterpool, bersihkan & cek pompa transfer solid WWTP, kalibrasi sensor terkait.\\nCatatan: Pantau sensor offline & TSS RWT, laporkan update inspeksi ke supervisor."`;
+
+    const SAMPLE_MD = `### Ringkasan Hasil Analisis
+Ringkasan temuan utama menunjukkan Bakteri Gram positif berbentuk kokus dan basil, berwarna ungu pekat, menunjukkan dominasi mikroorganisme dengan dinding sel tebal. Area coverage terestimasi 60-80%. Jenis flok teridentifikasi sebagai *Filamentous Bulking*. Indikasi kondisi: Dominasi Gram positif dengan flok yang cukup padat mengindikasikan kondisi aktif dan kemungkinan bulking filamentous.
+
+### Tipe Mikroorganisme Dominan
+Bakteri Gram positif berbentuk kokus dan basil, berwarna ungu pekat, menunjukkan dominasi mikroorganisme dengan dinding sel tebal
+
+### Indikasi Kondisi
+Dominasi Gram positif dengan flok yang cukup padat mengindikasikan kondisi aktif dan kemungkinan bulking filamentous
+
+### Dampak Potensial
+- Potensi gangguan proses pengolahan air akibat flok filamentous
+- Penurunan efisiensi sedimentasi karena flok besar
+- Risiko peningkatan viskositas lumpur
+
+### Rekomendasi Tindakan
+- Monitoring rutin untuk mencegah bulking berlebih
+- Penyesuaian parameter aerasi dan pH untuk kontrol mikroba
+- Pengaturan dosis kimia untuk mengurangi flok filamentous`;
+
+    const sourceEl = document.getElementById('source');
+    const inputMetaEl = document.getElementById('input-meta');
+    const charCountEl = document.getElementById('char-count');
+    const lineCountEl = document.getElementById('line-count');
+    const statusTextEl = document.getElementById('status-text');
+    const statusNoteEl = document.getElementById('status-note');
+    const inputFormatEl = document.getElementById('input-format');
+
+    const modeWaBtn = document.getElementById('mode-wa');
+    const modeMdBtn = document.getElementById('mode-md');
+    const tabWaBtn = document.getElementById('tab-wa');
+    const tabMdBtn = document.getElementById('tab-md');
+
+    const previewWa = document.getElementById('preview-wa');
+    const previewMd = document.getElementById('preview-md');
+    const waOutput = document.getElementById('wa-output');
+    const mdOutput = document.getElementById('md-output');
+    const waDate = document.getElementById('wa-date');
+
+    const now = new Date();
+    waDate.textContent = now.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+
+    let activeMode = 'wa';
+
+    function setMode(mode) {
+      activeMode = mode;
+      modeWaBtn.classList.toggle('active', mode === 'wa');
+      modeMdBtn.classList.toggle('active', mode === 'markdown');
+      tabWaBtn.classList.toggle('active', mode === 'wa');
+      tabMdBtn.classList.toggle('active', mode === 'markdown');
+      previewWa.classList.toggle('active', mode === 'wa');
+      previewMd.classList.toggle('active', mode === 'markdown');
+      inputMetaEl.textContent = mode === 'wa' ? 'WhatsApp preview aktif' : 'Markdown preview aktif';
+      statusTextEl.textContent = mode === 'wa' ? 'Mode WhatsApp' : 'Mode Markdown';
+      render();
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function normalizeRawInput(raw) {
+      const text = raw.replace(/\r\n/g, '\n').trim();
+      if (!text) return '';
+
+      const format = inputFormatEl.value;
+      if (format === 'raw') return text;
+
+      const looksLikeJson =
+        format === 'json' ||
+        ((text.startsWith('"') && text.endsWith('"')) || (text.startsWith("'") && text.endsWith("'")));
+
+      if (looksLikeJson) {
+        try {
+          return JSON.parse(text.replace(/^'|'$/g, '"'));
+        } catch (err) {
+          return text;
+        }
+      }
+
+      if (format === 'auto') {
+        if (text.includes('\\n') || text.includes('\\t') || text.includes('\\"')) {
+          try {
+            return JSON.parse(`"${text.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+          } catch (err) {
+            return text.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+          }
+        }
+      }
+
+      return text;
+    }
+
+    function updateStats(text) {
+      charCountEl.textContent = text.length;
+      lineCountEl.textContent = text ? text.split('\n').length : 0;
+    }
+
+    function applyInlineFormatting(text, mode) {
+      const tokenMap = [];
+      const tokenPrefix = mode === 'markdown' ? '__MD_TOKEN_' : '__WA_TOKEN_';
+      let working = text;
+
+      function stash(html) {
+        const token = `${tokenPrefix}${tokenMap.length}__`;
+        tokenMap.push(html);
+        return token;
+      }
+
+      if (mode === 'markdown') {
+        working = working
+          .replace(/`([^`\n]+)`/g, (_, code) => stash(`<code>${escapeHtml(code)}</code>`))
+          .replace(/\*\*([^*\n]+)\*\*/g, (_, bold) => stash(`<strong>${escapeHtml(bold)}</strong>`))
+          .replace(/_([^_\n]+)_/g, (_, em) => stash(`<em>${escapeHtml(em)}</em>`))
+          .replace(/\*([^*\n]+)\*/g, (_, em) => stash(`<em>${escapeHtml(em)}</em>`))
+          .replace(/~([^~\n]+)~/g, (_, del) => stash(`<del>${escapeHtml(del)}</del>`));
+      } else {
+        working = working
+          .replace(/```([\s\S]*?)```/g, (_, code) => stash(`<code>${escapeHtml(code.trim())}</code>`))
+          .replace(/\*([^*\n]+)\*/g, (_, bold) => stash(`<strong>${escapeHtml(bold)}</strong>`))
+          .replace(/_([^_\n]+)_/g, (_, em) => stash(`<em>${escapeHtml(em)}</em>`))
+          .replace(/~([^~\n]+)~/g, (_, del) => stash(`<del>${escapeHtml(del)}</del>`));
+      }
+
+      working = escapeHtml(working);
+      tokenMap.forEach((html, index) => {
+        working = working.replaceAll(`${tokenPrefix}${index}__`, html);
+      });
+
+      return working;
+    }
+
+    function renderWhatsApp(text) {
+      if (!text) {
+        waOutput.innerHTML = '<div class="bubble"><div class="bubble-content">Tidak ada pesan untuk dipreview.</div></div>';
+        return;
+      }
+
+      const parts = text.split('\n');
+      const content = parts.map((line) => {
+        const trimmed = line.trim();
+        if (/^-{5,}$/.test(trimmed)) {
+          return '<div style="opacity:.45;letter-spacing:2px;margin:4px 0">--------------------------------</div>';
+        }
+        if (/^•\s/.test(trimmed) || /^-\s/.test(trimmed) || /^\d+\.\s/.test(trimmed)) {
+          return `<div>${applyInlineFormatting(line, 'wa')}</div>`;
+        }
+        return applyInlineFormatting(line, 'wa');
+      }).join('\n');
+
+      waOutput.innerHTML = `
+        <div class="bubble">
+          <div class="bubble-content">${content}</div>
+          <div class="bubble-meta">
+            <span>${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}</span>
+            <span>✓✓</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function parseMarkdownTables(lines, startIndex) {
+      const rows = [];
+      let i = startIndex;
+
+      while (i < lines.length && /^\s*\|/.test(lines[i])) {
+        const cells = lines[i]
+          .trim()
+          .replace(/^\|/, '')
+          .replace(/\|$/, '')
+          .split('|')
+          .map(cell => cell.trim());
+        rows.push(cells);
+        i += 1;
+      }
+
+      if (rows.length < 2) {
+        return { html: '', nextIndex: startIndex };
+      }
+
+      const head = rows[0];
+      const body = rows.slice(1);
+      const thead = `<thead><tr>${head.map(cell => `<th>${applyInlineFormatting(cell, 'markdown')}</th>`).join('')}</tr></thead>`;
+      const tbody = `<tbody>${body.map(row => `<tr>${row.map(cell => `<td>${applyInlineFormatting(cell, 'markdown')}</td>`).join('')}</tr>`).join('')}</tbody>`;
+      return { html: `<table>${thead}${tbody}</table>`, nextIndex: i };
+    }
+
+    function renderMarkdown(text) {
+      if (!text) {
+        mdOutput.innerHTML = '<p style="color:#95a3b4;margin:0">Tidak ada konten markdown untuk dipreview.</p>';
+        return;
+      }
+
+      const lines = text.split('\n');
+      const blocks = [];
+      let i = 0;
+
+      while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        if (!trimmed) {
+          i += 1;
+          continue;
+        }
+
+        if (trimmed.startsWith('```')) {
+          const codeLines = [];
+          i += 1;
+          while (i < lines.length && !lines[i].trim().startsWith('```')) {
+            codeLines.push(lines[i]);
+            i += 1;
+          }
+          i += 1;
+          blocks.push(`<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
+          continue;
+        }
+
+        if (/^#{1,6}\s+/.test(trimmed)) {
+          const level = trimmed.match(/^#{1,6}/)[0].length;
+          const content = trimmed.replace(/^#{1,6}\s+/, '');
+          blocks.push(`<h${level}>${applyInlineFormatting(content, 'markdown')}</h${level}>`);
+          i += 1;
+          continue;
+        }
+
+        if (/^>\s?/.test(trimmed)) {
+          const quoteLines = [];
+          while (i < lines.length && /^>\s?/.test(lines[i].trim())) {
+            quoteLines.push(lines[i].trim().replace(/^>\s?/, ''));
+            i += 1;
+          }
+          blocks.push(`<blockquote>${quoteLines.map(v => applyInlineFormatting(v, 'markdown')).join('<br>')}</blockquote>`);
+          continue;
+        }
+
+        if (/^(\s*[-*+]\s+|\s*•\s+)/.test(trimmed)) {
+          const items = [];
+          const listType = /^(\s*\d+\.\s+)/.test(trimmed) ? 'ol' : 'ul';
+          while (i < lines.length && /^(\s*[-*+]\s+|\s*•\s+|\s*\d+\.\s+)/.test(lines[i].trim())) {
+            const itemText = lines[i].trim().replace(/^(\d+\.\s+|[-*+]\s+|•\s+)/, '');
+            items.push(`<li>${applyInlineFormatting(itemText, 'markdown')}</li>`);
+            i += 1;
+          }
+          blocks.push(`<${listType}>${items.join('')}</${listType}>`);
+          continue;
+        }
+
+        if (/^\s*\|/.test(trimmed)) {
+          const parsed = parseMarkdownTables(lines, i);
+          if (parsed.html) {
+            blocks.push(parsed.html);
+            i = parsed.nextIndex;
+            continue;
+          }
+        }
+
+        const paragraphLines = [line];
+        i += 1;
+        while (i < lines.length && lines[i].trim() && !/^(#{1,6}\s+|>\s?|```|\s*[-*+]\s+|\s*•\s+|\s*\d+\.\s+|\s*\|)/.test(lines[i].trim())) {
+          paragraphLines.push(lines[i]);
+          i += 1;
+        }
+        const paragraph = paragraphLines.join(' ').replace(/\s+/g, ' ').trim();
+        blocks.push(`<p>${applyInlineFormatting(paragraph, 'markdown')}</p>`);
+      }
+
+      mdOutput.innerHTML = blocks.join('');
+    }
+
+    function render() {
+      const raw = sourceEl.value;
+      const text = normalizeRawInput(raw);
+      updateStats(text);
+
+      if (!text) {
+        statusTextEl.textContent = 'Input kosong';
+        statusNoteEl.textContent = 'Paste pesan dulu, lalu klik Preview.';
+        renderWhatsApp('');
+        renderMarkdown('');
+        return;
+      }
+
+      if (activeMode === 'wa') {
+        statusTextEl.textContent = 'Rendering WhatsApp';
+        statusNoteEl.textContent = 'Format WA akan mengikuti simbol bawaan WhatsApp.';
+        renderWhatsApp(text);
+      } else {
+        statusTextEl.textContent = 'Rendering Markdown';
+        statusNoteEl.textContent = 'Markdown dibaca menjadi heading, list, code, dan table.';
+        renderMarkdown(text);
+      }
+    }
+
+    function clearAll() {
+      sourceEl.value = '';
+      updateStats('');
+      waOutput.innerHTML = '';
+      mdOutput.innerHTML = '';
+      statusTextEl.textContent = 'Siap';
+      statusNoteEl.textContent = 'Preview akan mengikuti mode yang dipilih.';
+    }
+
+    function loadSampleWa() {
+      sourceEl.value = SAMPLE_WA;
+      setMode('wa');
+      render();
+    }
+
+    function loadSampleWaLong() {
+      sourceEl.value = SAMPLE_WA_LONG;
+      setMode('wa');
+      render();
+    }
+
+    function loadSampleMd() {
+      sourceEl.value = SAMPLE_MD;
+      setMode('markdown');
+      render();
+    }
+
+    modeWaBtn.addEventListener('click', () => setMode('wa'));
+    modeMdBtn.addEventListener('click', () => setMode('markdown'));
+    tabWaBtn.addEventListener('click', () => setMode('wa'));
+    tabMdBtn.addEventListener('click', () => setMode('markdown'));
+    document.getElementById('btn-render').addEventListener('click', render);
+    document.getElementById('btn-clear').addEventListener('click', clearAll);
+    document.getElementById('btn-sample-wa').addEventListener('click', loadSampleWa);
+    document.getElementById('btn-sample-wa-long').addEventListener('click', loadSampleWaLong);
+    document.getElementById('btn-sample-md').addEventListener('click', loadSampleMd);
+
+    sourceEl.addEventListener('input', () => {
+      const text = normalizeRawInput(sourceEl.value);
+      updateStats(text);
+    });
+
+    inputFormatEl.addEventListener('change', render);
+
+    sourceEl.addEventListener('keydown', (event) => {
+      if (event.ctrlKey && event.key === 'Enter') {
+        render();
+      }
+    });
+
+    setMode('wa');
+    sourceEl.value = SAMPLE_WA;
+    render();
+  </script>
+</body>
+</html>
